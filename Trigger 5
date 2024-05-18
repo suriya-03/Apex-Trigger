@@ -1,0 +1,48 @@
+Trigger 5: Whenever the Opportunity StageName is changed from closed won then you need to ensure that the opportunity has product. use addError
+
+Trigger On : Opportunity
+Event : Before Update
+DML : Not Required
+
+trigger OpportunityTrigger on Opportunity (before update,after insert,after delete,after undelete) 
+{
+	opportunityHandler obj = new opportunityHandler();
+    obj.doAction();
+}
+
+public class opportunityHandler
+{
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            WHEN BEFORE_UPDATE
+            {
+                validateOpportunity(Trigger.New);
+            } 
+        }
+    }
+    
+    public void validateOpportunity(List<Opportunity> oppList)
+    {
+        
+        List<OpportunityLineItem> lineItemList = [SELECT Name,OpportunityId from OpportunityLineItem 
+                                                  Where OpportunityId =: Trigger.New];
+        
+        system.debug('List Of Products : '+ lineItemList);
+        system.debug('List Of Products : '+ lineItemList.size());
+        
+        for(opportunity opp : oppList)
+        {
+
+            if(lineItemList.size() == 0 && (opp.StageName == 'Closed Won' || opp.StageName =='Closed Lost'))
+            {
+                opp.addError('Unable to close due to no product');
+            }
+
+        }
+        
+    }
+
+}
