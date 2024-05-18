@@ -1,0 +1,83 @@
+Trigger Scenario: Whenever a contact is created, update in Associated account object with time stamp last modified on.
+Trigger On: Contact
+Events: After insert
+DML: update in Account Object.
+
+
+
+trigger ContactTrigger on Contact (after insert) 
+{
+	ContactHandler obj = new ContactHandler ();
+    obj.doAction();
+}
+
+
+public class ContactHandler 
+{
+	List<Contact> triggerOld;
+    List<Contact> triggerNew;
+    Map<Id,Contact> triggerOldMap;
+    Map<Id,Contact> triggerNewMap;
+    
+    public ContactHandler()
+    {
+        triggerOld = (List<Contact>) Trigger.Old;
+        triggerNew =  (List<Contact>) Trigger.New;
+        triggerOldMap = (Map<Id,Contact>) Trigger.OldMap; 
+        triggerNewMap = (Map<Id,Contact>) Trigger.NewMap;
+    }
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            WHEN AFTER_INSERT
+            {
+				         updateAccount(triggerNew);  
+            }
+        }
+    }
+    
+    public void updateAccount(List<Contact> conList)
+	{
+		
+		Map<Id,DateTime> conMap = new Map<Id,DateTime> ();
+		
+		
+		for(Contact con : conList)
+		{
+		
+			conMap.put(con.accountId,con.CreatedDate);
+		}
+		
+		List<Account> updateAcc = new List<Account> ();
+		
+		for(Id accIds : ConMap.keySet())
+		{
+		
+			Account acc = new Account ();
+			
+			acc.id = accIds;
+			acc.ContactTimeStampLastModified__c =  string.valueof(conMap.get(accIds)) ;
+			updateAcc.add(acc);
+		}
+		
+		try
+		{
+		
+			if(!updateAcc.IsEmpty())
+			{
+			
+				update updateAcc;
+				
+			}
+			
+		}
+		
+		catch(Exception e)
+  		{
+  		
+  			System.debug(e.getMessage());
+  		}
+    }
+}
