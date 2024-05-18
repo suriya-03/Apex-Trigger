@@ -1,0 +1,38 @@
+Trigger 6: Write a trigger when an opportunity is closed won then the opportunity closed date should be today's day.
+
+Trigger On : Opportunity
+Event : Before
+DML : Not Required
+
+trigger OpportunityTrigger on Opportunity (before update) 
+{
+	opportunityHandler obj = new opportunityHandler();
+    obj.doAction();
+}
+
+
+public class opportunityHandler
+{
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            WHEN BEFORE_UPDATE
+            {
+                oppClosedTodayDate(Trigger.New);
+            }
+        }
+    }
+
+    public void oppClosedTodayDate(List<Opportunity> oppList)
+    {
+        for(Opportunity opp  : OppList)
+        {
+            if(opp.StageName == 'Closed Won')
+            {
+                opp.CloseDate = Date.today();
+            }
+        }
+    }
+}
