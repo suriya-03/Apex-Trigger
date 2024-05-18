@@ -1,0 +1,95 @@
+Trigger Scenario: Count related contacts count and update in account custom field
+
+Trigger On: Contact
+Events: After insert, After delete, After undelete
+DML : update in Account Object
+
+
+trigger ContactTrigger on Contact (after insert,after update,after delete,after undelete) 
+{
+    ContactHandler obj = new ContactHandler ();
+    obj.doAction();
+}
+
+
+public class ContactHandler 
+{
+    List<Contact> triggerOld;
+    List<Contact> triggerNew;
+    Map<Id,Contact> triggerOldMap;
+    Map<Id,Contact> triggerNewMap;
+    
+    public ContactHandler()
+    {
+        triggerOld = (List<Contact>) Trigger.Old;
+        triggerNew =  (List<Contact>) Trigger.New;
+        triggerOldMap = (Map<Id,Contact>) Trigger.OldMap; 
+        triggerNewMap = (Map<Id,Contact>) Trigger.NewMap;
+    }
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            WHEN AFTER_INSERT
+            {
+                 countContacts(triggerNew);
+            }
+            WHEN AFTER_UPDATE
+            {
+               
+            }
+            WHEN AFTER_DELETE
+            {
+                 countContacts(triggerOld);
+              ;
+            }
+            WHEN AFTER_UNDELETE
+            {
+                countContacts(triggerNew);
+            }
+        }
+    }
+    
+    
+    public void countContacts(List<Contact> conList)
+    {
+        Set<Id> accountIds = new Set<Id> ();
+        
+        for(Contact con : conList)
+        {
+            if(con.AccountId != Null)
+            {
+                accountIds.add(con.AccountId);
+            }
+        }
+        
+        
+      List<Account> accList = [Select Id,Name,(Select id,lastName,accountId from Contacts) from Account where Id =: accountIds];
+        
+      List<Account> accountUpdate = new List<Account> ();  
+      for(Account acc: acclist)
+      {
+          Account rec = new Account();
+          rec.Id = acc.Id;
+          rec.Count_Contact__c = acc.Contacts.size();
+          accountUpdate.add(rec);
+          
+      }
+        
+      try
+      {
+          if(!accountUpdate.isEmpty())
+          {
+              update accountUpdate;
+          }
+          
+      }
+        
+      catch (Exception e)
+      {
+          system.debug('Error ' + e.getMessage());
+      }
+    }
+
+}
