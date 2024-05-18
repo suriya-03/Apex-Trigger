@@ -1,20 +1,22 @@
-Trigger Scenario: Whenever a contact is created, update in Associated account object with time stamp last modified on.
+Trigger Scenario: There is boolean field in account and also in contact if accounts all related contacts boolean field value is true means update true in
+account.and if any one of the related contact has false means update account boolean field value as false.
+
 Trigger On: Contact
-Events: After insert
+Events: After insert,After update,after delete,after undelete
 DML: update in Account Object.
 
 
 
 trigger ContactTrigger on Contact (after insert) 
 {
-	ContactHandler obj = new ContactHandler ();
+    ContactHandler obj = new ContactHandler ();
     obj.doAction();
 }
 
 
 public class ContactHandler 
 {
-	List<Contact> triggerOld;
+    List<Contact> triggerOld;
     List<Contact> triggerNew;
     Map<Id,Contact> triggerOldMap;
     Map<Id,Contact> triggerNewMap;
@@ -33,51 +35,74 @@ public class ContactHandler
         {
             WHEN AFTER_INSERT
             {
-				         updateAccount(triggerNew);  
+                updateAccountCheckbox(triggerNew);
+            }
+            WHEN AFTER_UPDATE
+            {
+               updateAccountCheckbox(triggerNew);
+            }
+            WHEN AFTER_DELETE
+            {
+                updateAccountCheckbox(triggerold);
+            }
+            WHEN AFTER_UNDELETE
+            {
+                updateAccountCheckbox(triggerNew);
             }
         }
     }
     
-    public void updateAccount(List<Contact> conList)
-	{
-		
-		Map<Id,DateTime> conMap = new Map<Id,DateTime> ();
-		
-		
-		for(Contact con : conList)
-		{
-		
-			conMap.put(con.accountId,con.CreatedDate);
-		}
-		
-		List<Account> updateAcc = new List<Account> ();
-		
-		for(Id accIds : ConMap.keySet())
-		{
-		
-			Account acc = new Account ();
-			
-			acc.id = accIds;
-			acc.ContactTimeStampLastModified__c =  string.valueof(conMap.get(accIds)) ;
-			updateAcc.add(acc);
-		}
-		
-		try
-		{
-		
-			if(!updateAcc.IsEmpty())
-			{
-			
-				update updateAcc;
-				
-			}
-			
-		}
-		
-		catch(Exception e)
-  		{
-  		
-  			System.debug(e.getMessage());
-  		}
+ 
+    public void updateAccountCheckbox(List<Contact> conList)
+    {
+        Set<Id> accountIds = new Set<Id> ();
+        
+        for(Contact con : conList)
+        {
+            if(con.AccountId!=NULL)
+            {
+                accountIds.add(con.AccountId);
+            }
+        }
+
+        List<Account> accList = [Select Id,Accounts__c,(Select accountId,Contacts__c from Contacts) from Account
+                                Where id =: accountids];
+          
+     
+        for(Account acc : accList)
+        {
+            
+            for(Contact con : acc.Contacts)
+            {
+             
+              if(con.contacts__c == false)
+              {
+                   acc.Accounts__c = false;
+                  
+                  break;
+              }
+              
+              else
+              {
+                   acc.Accounts__c = true;
+              }
+               
+            }
+
+        }
+        try
+        {
+            if(!accList.isEmpty())
+            {
+                update accList;
+            }
+        }
+        
+        catch(Exception e)
+        {
+            system.debug('Error ' + e.getMessage());
+        }   
+         
     }
+    
 }
