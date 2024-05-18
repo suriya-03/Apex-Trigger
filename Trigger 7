@@ -1,0 +1,81 @@
+Trigger 7 : Count the no of opportunity and update it in the account object
+
+Trigger On : Opportunity
+Event : After
+DML : Update in Account Object
+
+trigger OpportunityTrigger on Opportunity (after insert,after delete,after undelete) 
+{
+	  opportunityHandler obj = new opportunityHandler();
+    obj.doAction();
+}
+
+
+public class opportunityHandler
+{
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            
+            WHEN AFTER_INSERT
+            {
+                countOpportunities(Trigger.New);
+            }
+            
+            WHEN AFTER_DELETE
+            {
+                countOpportunities(Trigger.Old);
+            }
+            
+            WHEN AFTER_UNDELETE
+            {
+                countOpportunities(Trigger.New);
+            }
+        }
+    }
+    
+    public void countOpportunities(List<Opportunity> oppList)
+    {
+     	Set<Id> accountIds = new Set<Id> ();
+        
+        for(Opportunity opp : oppList)
+        {
+            if(opp.AccountId != NULL)
+            {
+                accountIds.add(opp.AccountId);
+            }
+        }
+        
+        List<Account> accList = [Select Id,Name,(Select Id,accountId from Opportunities) from Account where id =: accountids];
+        
+        System.debug('Account ' + accList);
+        System.debug('Account ' + accList.size());
+        List<Account> accountUpdate = new List<Account> ();
+        
+        for(Account acc : acclist)
+        {
+            Account rec = new Account();
+            rec.id = acc.id;
+            rec.Opportunities_Count__c = acc.Opportunities.size();
+            system.debug('Count ' + rec.Opportunities_Count__c);
+            accountUpdate.add(rec);
+        }
+        
+        try
+        {
+            if(!accountUpdate.isEmpty())
+            {
+                update accountUpdate;
+            }
+        }  
+        
+        catch(Exception e)
+        {
+            system.debug('Error '+ e.getMessage());
+        }
+          
+    }
+}
+
