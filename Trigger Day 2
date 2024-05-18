@@ -1,0 +1,94 @@
+Trigger Scenario: When lead is created or Updated. Then check if the email is already there in existing contacts. If Email Already exists  throw the error.  
+
+Trigger on Object: Lead
+Events: Before insert and before update
+DML Operation: Not Required
+
+trigger LeadTrigger on Lead (before insert,before update) 
+{
+	  LeadHandler obj = new LeadHandler ();
+    obj.doAction();
+}
+
+public class LeadHandler 
+{
+   List<Lead> triggerold;
+   List<Lead> triggerNew;
+   Map<Id,Lead> triggerOldMap;
+   Map<Id,Lead> triggerNewMap;
+    
+    public LeadHandler()
+    {
+      triggerOld = (List<Lead>) Trigger.Old;
+      triggerNew= (List<Lead>) Trigger.New;
+      triggerOldMap = (Map<Id,Lead>) Trigger.OldMap;
+       triggerNewMap = (Map<Id,Lead>) Trigger.NewMap;
+        
+    }
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            
+            WHEN BEFORE_INSERT
+            {
+                validateEmailOnContact(TriggerNew);
+            }
+            
+            WHEN BEFORE_UPDATE
+            {
+                validateEmailOnContact(TriggerNew);
+            }
+            
+        }
+    }
+    
+    public void validateEmailOnContact(List<Lead> leadList)
+    {
+        
+        Map<Id,lead> mapLead= new Map<Id,lead> ();
+        Map<Id,string> emailIdsMap = new Map<Id,string> ();
+        
+        
+        for(Lead rec : leadList)
+        {
+            if(Trigger.isUpdate)
+        	{
+                system.debug('update');
+                 if(rec.Email != Null && (rec.email != TriggerOldMap.get(rec.Id).Email))
+                {
+                    system.debug('update for loop');
+                    emailIdsMap.put(rec.id, rec.email);
+                    mapLead.put(rec.id,rec);
+                }
+        	}
+            
+            if(Trigger.isInsert)
+            {
+                system.debug('Insert');
+                 if(rec.Email != Null)
+                {
+                    system.debug('Insert for loop');
+                    emailIdsMap.put(rec.id, rec.email);
+                    mapLead.put(rec.id,rec);
+                } 
+            }
+           
+        }
+	
+        List<Contact> conList = [Select id,Email from Contact where Email IN: emailIdsMap.Values()];
+        
+        for(Id rec : mapLead.keyset())
+        {
+            for(contact con: conList)
+            {
+                if(con.Email == mapLead.get(rec).Email)
+                {
+                      system.debug('Check Validation');
+                      mapLead.get(rec).Email.addError('Already email id exist in the contact');
+                }
+            }
+        }
+    }
+}
