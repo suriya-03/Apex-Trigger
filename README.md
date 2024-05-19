@@ -8,3 +8,4 @@ Salesforce Apex Trigger Scenario's Practice
 #####  [Trigger 5: Whenever the Opportunity StageName is changed from closed won then you need to ensure that the opportunity has product.](https://github.com/suriya-03/Apex-Trigger/blob/cc0c0f312dce6a13fd24af305bbfc400964cca8e/Trigger%205)
 #####  [Trigger 6: Write a trigger when an opportunity is closed won then opportunity closed date should be of today's day.](https://github.com/suriya-03/Apex-Trigger/blob/11f25f3840507e8d9b2d06708ba710111186025a/Trigger%206)
 #####  [Trigger 7: Count the no of opportunity and update it in the account object](https://github.com/suriya-03/Apex-Trigger/blob/d4f424cc1191f2c46475bc79ec425c1faa340431/Trigger%207)
+#####  [Trigger 8:  Whenever a contact is created with active checkbox=true, update the count of active contacts in account](https://github.com/suriya-03/Apex-Trigger/blob/8f172ae81da79895836776a20990d979a88b8352/Trigger%208)
