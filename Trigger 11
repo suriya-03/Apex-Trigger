@@ -1,0 +1,84 @@
+Trigger Secenario :  Write a trigger to updated correctly when an Opportunity is reparented from one Account to another. Already code exist for update no of opportunities in the account object.   
+
+Trigger on : Opportunity
+Event : After
+DML : Update in Account Object
+
+TRIGGER
+
+Trigger OpportunityTrigger on Opportunity(Ater update)
+{
+   opportunityHandler obj = new opportunityHandler();
+   obj.doAction();
+}
+
+HANDLER
+
+public class opportunityHandler
+{
+  List<Opportunity> triggerold;
+  List<Opportunity> triggerNew;
+  Map<Id,Opportunity> triggerOldMap;
+  Map<Id,Opportunity> triggerNewMap;
+  
+public OpportunityHandler()
+  {
+      triggerOld = (List<Opportunity>) Trigger.Old;
+      triggerNew= (List<Opportunity>) Trigger.New;
+      triggerOldMap = (Map<Id,Opportunity>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,Opportunity>) Trigger.NewMap;
+  }
+  
+  public void doAction()
+  {
+      SWITCH ON Trigger.OperationType
+      {
+
+          WHEN AFTER_UPDATE
+          {
+              transferOppRecCount(triggerNew);  
+          }
+
+      }
+  }
+  
+ 
+  public void transferOppRecCount(List<Opportunity> oppList)
+  {
+      Set<Id> accountIds = new Set<Id> ();
+      
+      for(Opportunity opp : oppList)
+      {
+          if(opp.AccountId != Null)
+          {
+              if(Trigger.isUpdate)
+              {
+                  if(opp.AccountId != TriggerOldMap.get(opp.Id).AccountId) //check accountId is change or not
+                  {
+                      accountIds.add(opp.accountId);
+                      accountIds.add(TriggeroldMap.get(opp.Id).AccountId);
+                      
+                  }
+              }
+              
+          }
+      }
+          List<Account> accLists = [Select name, (Select Name, accountId from Opportunities) From Account
+                                   Where Id =: accountIds];
+         
+          for(Account acc : accLists)
+          {
+              acc.Opportunities_Count__c = acc.Opportunities.size();
+          }
+      try
+      {
+          update accLists;
+      }
+      
+      catch(Exception e)
+      {
+          System.debug('Error' +e);
+      }
+  }
+
+}
