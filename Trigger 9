@@ -1,0 +1,114 @@
+Trigger Scenario : In account we have custom checkbox field called 'Above Threshold .we have custom label to store the Threshold Amount . 
+Whenever an opportunity is changed with amount more than/less  than the threshold value then the checkbox field in account should be update accordingly.
+
+Trigger : opportunity
+Event : After
+DML: Update on Account Object
+
+Custom Label : Above Threshold value = 500000;
+
+trigger OpportunityTrigger on Opportunity (after update,after insert,after delete,after undelete) 
+{
+opportunityHandler obj = new opportunityHandler();
+  obj.doAction();
+}
+
+
+public class opportunityHandler
+{
+  List<Opportunity> triggerold;
+  List<Opportunity> triggerNew;
+  Map<Id,Opportunity> triggerOldMap;
+  Map<Id,Opportunity> triggerNewMap;
+  
+public OpportunityHandler()
+  {
+    triggerOld = (List<Opportunity>) Trigger.Old;
+      triggerNew= (List<Opportunity>) Trigger.New;
+      triggerOldMap = (Map<Id,Opportunity>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,Opportunity>) Trigger.NewMap;
+  }
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            WHEN AFTER_INSERT
+            {
+                updateThresholdInAccount(TriggerNew);
+            }
+            
+            WHEN AFTER_UPDATE
+            {
+                updateThresholdInAccount(TriggerNew);
+            }
+            WHEN AFTER_DELETE
+            {
+                updateThresholdInAccount(Triggerold);
+            }
+            
+            WHEN AFTER_UNDELETE
+            {
+                updateThresholdInAccount(TriggerNew);
+            }
+        }
+    }
+    
+  public void updateThresholdInAccount(List<Opportunity> oppList)
+  {
+      Set<Id> accountIds = new Set<Id> ();
+  
+  for(Opportunity opp: oppList)
+  {
+          if(opp.AccountId != NULL && opp.Amount != NULL)
+          {
+              
+              if(Trigger.isUpdate)
+              {
+                  if(opp.Amount != TriggerOldMap.get(opp.id).Amount)
+                  {
+                      accountIds.add(opp.accountId);
+                  }
+              }
+              
+              else
+              {
+                  if(opp.AccountId != NULL && opp.Amount != NULL)
+                  {
+                      accountIds.add(opp.accountId);
+                  }
+              }
+          }
+      }
+
+List<Account> accList = [Select name,AboveThreshold__c,(Select accountId,amount from opportunities where Amount >=: Integer.valueof(system.Label.AboveThreshold)) 
+  from Account where Id IN : accountIds];
+  
+if(!accList.isEmpty())
+{
+  for(Account acc : accList)
+  {
+    if(acc.Opportunities.size()>0)
+    {
+      acc.AboveThreshold__c = true;
+    }
+            
+    else
+    {
+      acc.AboveThreshold__c = false; 
+     }
+  }
+  }
+		
+      try
+      {
+          update accList;
+      }
+  
+      Catch(Exception e)
+      {
+          system.debug('Error' + e.getMessage());
+      }
+
+    }
+}
