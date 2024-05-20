@@ -1,0 +1,111 @@
+Trigger Scenario :
+Trigger on : Opportunity Line Item
+Event : After
+DML : update
+
+
+Trigger
+
+trigger OpportunityLineItemTrigger on OpportunityLineItem (After insert,After delete,After Undelete) 
+{
+  OpportunityLineItemHandler obj = new OpportunityLineItemHandler ();
+  obj.doAction();
+}
+
+
+
+public class OpportunityLineItemHandler 
+{
+  List<OpportunityLineItem> triggerold;
+  List<OpportunityLineItem> triggerNew;
+  Map<Id,OpportunityLineItem> triggerOldMap;
+  Map<Id,OpportunityLineItem> triggerNewMap;
+  
+public OpportunityLineItemHandler ()
+  {
+      triggerOld = (List<OpportunityLineItem>) Trigger.Old;
+      triggerNew= (List<OpportunityLineItem>) Trigger.New;
+      triggerOldMap = (Map<Id,OpportunityLineItem>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,OpportunityLineItem>) Trigger.NewMap;
+  }
+  
+public void doAction()
+{
+  SWITCH ON Trigger.OperationType
+  {
+    WHEN AFTER_INSERT
+    {
+      countOpportunityLineItem(TriggerNew);
+    }
+    
+    WHEN AFTER_DELETE
+    {
+      countOpportunityLineItem(Triggerold);
+    }
+    
+    WHEN AFTER_UNDELETE
+    {
+      countOpportunityLineItem(TriggerNew);
+    }
+  }
+}
+
+public void countOpportunityLineItem (List<OpportunityLineItem> oppLineList)
+{
+
+  Map<Id,Integer> oppMap = new Map<Id,Integer> ();
+  
+  Set<Id> opportunityIds = new Set<Id> ();
+  
+  for(OpportunityLineItem oppLine  : oppLineList)
+  {	
+    if(oppLine.OpportunityId != NULL && oppLine.ListPrice > 50000)
+    {	
+      opportunityIds.add(oppLine.OpportunityId);
+    }
+  }
+  
+  List<Opportunity> oppList = [Select Id,accountId,(Select id,ListPrice from OpportunityLineItems 
+                                  where ListPrice > 50000) from Opportunity Where Id =: OpportunityIds];
+  
+  if(OppList.size() > 0)
+  
+  {
+
+    for(Opportunity opp : oppList)
+    {
+    
+      oppMap.put(opp.accountId, opp.OpportunityLineItems.size());
+    }
+  }
+  
+  
+  List<Account> accList = [Select Id,Count_Line_Items__c from Account where Id =: oppMap.keyset()];
+
+  if(accList.size() > 0)
+  {
+    for(Account acc : accList)
+    {
+        if(acc.Count_Line_Items__c != NULL)
+         {
+            acc.Count_Line_Items__c = acc.Count_Line_Items__c + oppMap.get(acc.id);
+          
+          }
+        else
+          {
+            acc.Count_Line_Items__c = oppMap.get(acc.id);
+          }
+    }
+  }
+  
+  try
+  {
+    update accList;
+  }
+  
+  catch(Exception e)
+  {
+    system.debug('Error ' + e);
+  }
+}
+}
