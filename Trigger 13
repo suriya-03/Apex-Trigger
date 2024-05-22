@@ -1,0 +1,86 @@
+Trigger Scenario : Automatically close opportunities with Probability > 70% when Checkbox is checked on Account.
+Trigger on : Account
+Event : After
+DML : Update in Opportunity
+
+TRIGGER
+
+trigger AccountTrigger on Account (after update) 
+{
+AccountHandler obj = new AccountHandler ();
+ obj.doAction();
+}
+
+HANDLER
+public class AccountHandler 
+{
+  List<Account> triggerold;
+  List<Account> triggerNew;
+  Map<Id,Account> triggerOldMap;
+  Map<Id,Account> triggerNewMap;
+  
+public AccountHandler()
+  {
+    triggerOld = (List<Account>) Trigger.Old;
+      triggerNew= (List<Account>) Trigger.New;
+      triggerOldMap = (Map<Id,Account>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,Account>) Trigger.NewMap;
+
+  }
+  
+  public void doAction()
+  {
+      SWITCH ON Trigger.OperationType
+      {
+          WHEN AFTER_UPDATE
+          {
+            onAfterUpdate (triggerNew);
+          }
+        
+      }
+  }
+  
+  public void onAfterUpdate(List<Account> accList)
+  {
+          AccountHelper.closeOpportunity(accList) ;
+    
+  }    
+}
+
+HELPER CLASS
+
+public static void closeOpportunity(List<Account> accList)
+{
+
+  Set<Id> accountIds = new Set<Id> ();
+  
+  for(Account acc : accList)
+  {
+    if(acc.Probability_X70__c  == true)
+    {
+      accountIds.add(acc.Id);
+    }
+  }
+  
+  List<Opportunity> oppList = [Select Probability, accountId from Opportunity where accountId IN : accountIds AND Probability > 70];
+  
+  for(Opportunity opp : oppList)
+  {
+  
+    if(opp.Probability > 70)
+    {
+      opp.StageName = 'Closed Won';
+    }
+  }
+  
+  try
+  {
+    update oppList;
+  }
+  
+  catch(Exception e)
+  {
+    system.debug('Error ' + e);
+  }
+}
+
