@@ -1,0 +1,75 @@
+Trigger Scenario : "𝐖𝐡𝐞𝐧 𝐭𝐡𝐞 𝐒𝐭𝐚𝐠𝐞𝐍𝐚𝐦𝐞 𝐨𝐧 𝐎𝐩𝐩𝐨𝐫𝐭𝐮𝐧𝐢𝐭𝐲 '𝐂𝐥𝐨𝐬𝐞𝐝 𝐖𝐨𝐧’ 𝐭𝐡𝐞𝐧 𝐜𝐡𝐞𝐜𝐤 𝐢𝐟 𝐀𝐜𝐜𝐨𝐮𝐧𝐭'𝐬 𝐀𝐜𝐭𝐢𝐯𝐞 = '𝐍𝐨' 𝐚𝐧𝐝 𝐎𝐰𝐧𝐞𝐫𝐬𝐡𝐢𝐩 = '𝐏𝐫𝐢𝐯𝐚𝐭𝐞'. 𝐚𝐛𝐨𝐯𝐞 𝐜𝐨𝐧𝐝𝐢𝐭𝐢𝐨𝐧𝐬 𝐚𝐫𝐞 𝐭𝐫𝐮𝐞 𝐭𝐡𝐞𝐧 𝐭𝐡𝐫𝐨𝐰 𝐚𝐧 𝐞𝐫𝐫𝐨𝐫 𝐰𝐢𝐭𝐡 𝐦𝐞𝐬𝐬𝐚𝐠𝐞 -> 
+"𝐎𝐩𝐩𝐨𝐫𝐭𝐮𝐧𝐢𝐭𝐲 𝐜𝐚𝐧𝐧𝐨𝐭 𝐛𝐞 𝐮𝐩𝐝𝐚𝐭𝐞𝐝 𝐭𝐨 𝐂𝐥𝐨𝐬𝐞𝐝 𝐖𝐨𝐧 𝐟𝐨𝐫 𝐈𝐧𝐚𝐜𝐭𝐢𝐯𝐞 𝐀𝐜𝐜𝐨𝐮𝐧𝐭" 𝐟𝐨𝐫 𝐛𝐨𝐭𝐡 𝐢𝐧𝐬𝐞𝐫𝐭𝐢𝐨𝐧 𝐚𝐧𝐝 𝐮𝐩𝐝𝐚𝐭𝐢on
+
+Trigger on :Opportunity
+Event : Before
+DML : Not Required
+
+
+trigger OpportunityTrigger on Opportunity (before Insert,before update) 
+{
+opportunityHandler obj = new opportunityHandler();
+  obj.doAction();
+}
+
+
+
+public class opportunityHandler
+{
+  List<Opportunity> triggerold;
+  List<Opportunity> triggerNew;
+  Map<Id,Opportunity> triggerOldMap;
+  Map<Id,Opportunity> triggerNewMap;
+  
+public OpportunityHandler()
+  {
+    triggerOld = (List<Opportunity>) Trigger.Old;
+      triggerNew= (List<Opportunity>) Trigger.New;
+      triggerOldMap = (Map<Id,Opportunity>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,Opportunity>) Trigger.NewMap;
+  }
+  
+  public void doAction()
+  {
+      SWITCH ON Trigger.OperationType
+      {
+          WHEN BEFORE_INSERT
+          {
+              opportunityValidation(TriggerNew);
+          }
+          WHEN BEFORE_UPDATE
+          {
+              opportunityValidation(TriggerNew);  
+          }
+      }
+  }
+    public void opportunityValidation(List<opportunity> oppList)
+  {
+      Set<Id> accountIds = new Set<Id> ();
+      
+      for(opportunity opp3 : oppList)
+      {
+          if(opp3.accountId != NULL && (opp3.StageName == 'Closed Won'))
+          {
+             accountIds.add(opp3.accountId);
+          }
+      }
+      
+      system.debug(accountIds);
+        List<Account> accList = [SELECT Id, Active__c, Ownership FROM Account WHERE Id IN :accountIds];
+      System.debug(accList);
+
+      // Create a map to check Account status
+      Map<Id, Account> accountMap = new Map<Id, Account>(accList);
+
+      for (Opportunity opp : oppList) {
+          if (opp.AccountId != null && opp.StageName == 'Closed Won') {
+              Account relatedAccount = accountMap.get(opp.AccountId);
+              if (relatedAccount != null && relatedAccount.Active__c == 'No' && relatedAccount.Ownership == 'Private') {
+                  opp.addError('Error: Opportunities cannot be Closed Won for inactive private accounts.');
+              }
+          }
+      }
+
+  }
+}
