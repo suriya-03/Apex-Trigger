@@ -1,0 +1,74 @@
+/* Trigger 17 : When we create the opportunity with probability = 50% then the opportunity owner will be automatically added
+        to account Team of the associated account for the opportunity
+
+Trigger On : Opportunity
+Event : insert and update
+DML : insert */
+
+//Trigger
+
+Trigger AccountTrigger on Account(After insert, After update)
+{
+  AccountHandler obj = new AccountHandler ();
+  obj.doAction();
+}
+
+//HANDLER CLASS
+
+public class opportunityHandler
+{
+    List<Opportunity> triggerold;
+    List<Opportunity> triggerNew;
+    Map<Id,Opportunity> triggerOldMap;
+    Map<Id,Opportunity> triggerNewMap;
+    
+public OpportunityHandler()
+    {
+    	  triggerOld = (List<Opportunity>) Trigger.Old;
+        triggerNew= (List<Opportunity>) Trigger.New;
+        triggerOldMap = (Map<Id,Opportunity>) Trigger.OldMap;
+        triggerNewMap = (Map<Id,Opportunity>) Trigger.NewMap;
+    }
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+            
+            WHEN AFTER_INSERT
+            {
+                 updateAccountTeam.updateAccountTeamMembers(TriggerNew);
+            }
+
+        }
+    }
+}
+
+//HELPER CLASS
+
+public class updateAccountTeam {
+    
+    public static void updateAccountTeamMembers(List<Opportunity> oppList)
+    {
+        List<AccountTeamMember> accTeamList = new  List<AccountTeamMember> ();
+        
+        for(Opportunity opp : oppList)
+        {
+            AccountTeamMember accTeam = new AccountTeamMember();
+            
+            if(opp.AccountId != NULL && opp.Probability == 50)
+            {
+                accTeam.AccountId = opp.AccountId;
+                accTeam.userId = opp.OwnerId;
+                accTeamList.add(accTeam);
+            }
+        }
+        
+        if(!accTeamList.isEmpty())
+        {
+            insert accTeamList;
+        }
+        
+    }
+    
+}
