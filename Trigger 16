@@ -1,0 +1,71 @@
+/* Trigger Scenario : Write a Trigger on Account, When the Account is updated Check all the opportunities related to the Account. updated all
+Opportunities stage to 'Closed Lost' if an opportunity created date if greater than 30 days from today and stage not equal to
+closed won
+
+Trigger on : Account
+Event : Update
+DML : update */
+
+//Trigger
+
+Trigger AccountTrigger on Account (After Update)
+{
+  AccountHandler obj = new AccountHandler();
+  obj.doAction ();
+}
+
+//HANDLER
+
+public class AccountHandler 
+{
+    List<Account> triggerold;
+    List<Account> triggerNew;
+    Map<Id,Account> triggerOldMap;
+    Map<Id,Account> triggerNewMap;
+    
+public AccountHandler()
+    {
+    	triggerOld = (List<Account>) Trigger.Old;
+        triggerNew= (List<Account>) Trigger.New;
+        triggerOldMap = (Map<Id,Account>) Trigger.OldMap;
+        triggerNewMap = (Map<Id,Account>) Trigger.NewMap;
+    }
+    
+    public void doAction()
+    {
+        SWITCH ON Trigger.OperationType
+        {
+
+            WHEN AFTER_UPDATE
+            {
+              updateOpportunityClosedLost.OpportunityClosedLost(TriggerNew);
+            }
+           
+        }
+    }
+}
+
+//HELPER CLASS
+
+public class updateOpportunityClosedLost 
+{
+	public static void OpportunityClosedLost(List<Account> accList)
+    {
+      
+        List<opportunity> oppList = [Select accountId,createdDate,StageName from opportunity where accountId =: accList AND 
+                                     (StageName != 'Closed Lost' OR StageName != 'Closed Won') AND 
+                                     createdDate <= LAST_N_DAYS : 30];
+
+        if(oppList.size() > 0)
+        {
+            for(Opportunity opp : oppList)
+            {
+                opp.StageName = 'Closed Lost';
+            }
+            
+            update oppList;
+        }
+    }
+}
+
+    
