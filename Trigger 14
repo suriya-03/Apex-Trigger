@@ -1,0 +1,99 @@
+Trigger Scenario : Write an apex trigger, that create or update Task  description with stage name based on opportunity Stage Name change.
+
+Trigger on: Opportunity
+Event : After
+DML :Insert and update
+
+Trigger 
+
+trigger OpportunityTrigger on Opportunity (after update,after insert) 
+{
+opportunityHandler obj = new opportunityHandler();
+  obj.doAction();
+}
+
+HANDLER
+
+public class opportunityHandler
+{
+  List<Opportunity> triggerold;
+  List<Opportunity> triggerNew;
+  Map<Id,Opportunity> triggerOldMap;
+  Map<Id,Opportunity> triggerNewMap;
+  
+public OpportunityHandler()
+  {
+    triggerOld = (List<Opportunity>) Trigger.Old;
+      triggerNew= (List<Opportunity>) Trigger.New;
+      triggerOldMap = (Map<Id,Opportunity>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,Opportunity>) Trigger.NewMap;
+  }
+  
+  public void doAction()
+  {
+      SWITCH ON Trigger.OperationType
+      {
+          WHEN AFTER_UPDATE
+          {
+              updateTaskOpportunity.updateOrInsertTask(TriggerNew,TriggerOldMap);            	
+          }
+      }
+  }
+}
+
+HELPER CLASS
+
+public class updateTaskOpportunity 
+{
+  
+  public static void updateOrInsertTask(List<Opportunity> oppList, Map<Id,Opportunity> oppOldMap)
+  {
+      
+      Set<Id> oppIds = new Set<Id> ();
+      for(Opportunity opp : oppList)
+      {
+          if(opp.stageName != oppOldMap.get(opp.Id).stagename)    
+          {
+              oppIds.add(opp.Id);
+          }        
+      }
+      List<Opportunity> oppLists = [Select StageName, (Select subject,description,whatId from Tasks where whatId =: oppIds) from opportunity];
+      
+      List<Task> updateTask = new List<Task> ();
+      List<Task> insertTask = new List<Task> ();
+      
+      for(Opportunity oppRec: oppLists)
+      {
+          
+          if(oppRec.Tasks.size()>0)
+          {
+              for(Task tsrec : oppRec.Tasks)
+              {
+                  tsrec.Subject = 'Update StageName';
+                  tsrec.Description = oppRec.StageName;
+                  updateTask.add(tsrec);              
+              }
+              
+          }
+          
+          else
+          {
+              Task ts = new Task();
+              ts.WhatId = oppRec.Id;
+              ts.Description = oppRec.StageName;
+              ts.Subject = 'opportunity StageName';
+              insertTask.add(ts);
+          }
+      }
+      
+      if(!insertTask.isEmpty())
+      {
+          insert insertTask;
+      }
+      
+       if(!UpdateTask.isEmpty())
+      {
+          update updateTask;
+      }
+  }
+}
