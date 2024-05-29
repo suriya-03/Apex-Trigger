@@ -1,0 +1,111 @@
+/* Trigger Scenario : Create two record types named as 'Partner Case' and 'Customer Case' on Case Object. On creation of Case as per the record type
+populate the total number of Partner or Customer case on Account Object. Create Custom Fields on Account to have Total Numbers.
+
+Trigger On : Case Object
+Event : After
+DML : Update */
+
+//TRIGGER
+
+trigger CaseTrigger on Case (After insert,after delete, After undelete) 
+{
+  CaseHandler obj = new CaseHandler();
+  obj.doAction();
+}
+
+//HANDLER
+
+public class CaseHandler 
+{
+  List<Case> triggerold;
+  List<Case> triggerNew;
+  Map<Id,Case> triggerOldMap;
+  Map<Id,Case> triggerNewMap;
+  
+public CaseHandler()
+  {
+      triggerOld = (List<Case>) Trigger.Old;
+      triggerNew= (List<Case>) Trigger.New;
+      triggerOldMap = (Map<Id,Case>) Trigger.OldMap;
+      triggerNewMap = (Map<Id,Case>) Trigger.NewMap;
+  }
+  
+  public void doAction()
+  {
+      SWITCH ON Trigger.OperationType
+      {
+
+          WHEN AFTER_INSERT
+          {
+             CountCases.countCasesbasedonRecordType(TriggerNew);
+          }
+
+          WHEN AFTER_DELETE
+          {
+              CountCases.countCasesbasedonRecordType(Triggerold);               
+          }
+          
+          WHEN AFTER_UNDELETE
+          {
+              CountCases.countCasesbasedonRecordType(TriggerNew);
+          }
+      }
+  }
+}
+
+//HELPER
+
+public class CountCases 
+{
+public static void countCasesbasedonRecordType(List<Case> caseList)
+  {
+      Set<Id> accountIds = new Set<Id> ();
+      
+      for(Case cs : caseList)
+      {
+          if(cs.accountId != NULL)
+          {
+              accountIds.add(cs.accountId);
+          }
+      }
+      
+      
+      List<Account> accList = [Select id,Total_Partner_Case__c,Total_Customer_Case__c,
+                               (Select accountId,RecordType.Name from cases Where accountId != NULL) from 
+                              Account where Id IN : accountIds];
+      
+      List<Account> updateAccount = new List<Account> ();
+      
+      for(Account accRec : accList)
+      {
+          integer partnerCount=0; 
+          integer CustomerCount=0;
+          
+          if(accRec.cases.size()>0)
+          {
+
+              for(Case cs : accRec.cases)
+              {
+                  if(cs.RecordType.Name == 'Partner Case Record Type')
+                  {
+                     partnerCount+=1;
+                  }
+                  
+                  else if(cs.RecordType.Name == 'Customer Case Report Type')
+                  {
+                     CustomerCount+=1;
+                  }
+              }
+          }
+          accRec.Total_Customer_Case__c =  CustomerCount;
+          accRec.Total_Partner_Case__c = partnerCount;
+          updateAccount.add(accRec);
+      }
+      
+      if(!updateAccount.isEmpty())
+      {
+          update updateAccount;
+      }
+  }
+}
+
