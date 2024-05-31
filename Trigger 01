@@ -1,10 +1,10 @@
-//Trigger Scenario : Whenever a contact is created, update in Associated account object with time stamp last modified on.
+/*Trigger Scenario : Whenever a contact is created, update in Associated account object with time stamp last modified on.
 
-//Account field Name :  ContactTimeStampLastModified__c /Datatype - DateTime
+Account field Name :  ContactTimeStampLastModified__c /Datatype - DateTime
 
 Trigger on - Contact
 Event - After insert
-DML - insert in Parent Account Object
+DML - insert in Parent Account Object*/
 
 Trigger ContactTrigger on Trigger (After insert)
 {
