@@ -1,8 +1,8 @@
-Trigger Scenario: When lead is created or Updated. Then check if the email is already there in existing contacts. If Email Already exists  throw the error.  
+/*Trigger Scenario: When lead is created or Updated. Then check if the email is already there in existing contacts. If Email Already exists  throw the error.  
 
 Trigger on Object: Lead
 Events: Before insert and before update
-DML Operation: Not Required
+DML Operation: Not Required*/
 
 trigger LeadTrigger on Lead (before insert,before update) 
 {
