@@ -7,7 +7,7 @@ DML: update in Account Object.
 
 
 
-trigger ContactTrigger on Contact (after insert) 
+trigger ContactTrigger on Contact (after insert,After update,after delete,after undelete) 
 {
     ContactHandler obj = new ContactHandler ();
     obj.doAction();
