@@ -21,12 +21,6 @@ public with sharing class ContactHandler {
             {
                 ContactHelper.SetPrimaryContact(triggerNew);
             }
-            WHEN BEFORE_DELETE
-            {
-                //ContactHelper.preventDeleteContact_ActiveAccount(triggerOld);
-                ContactHelper.SetPrimaryContact(triggerold);
-
-            }
         }
     }
 }
