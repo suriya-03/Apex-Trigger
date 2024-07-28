@@ -16,17 +16,11 @@ public with sharing class AccountHandler {
     {
         SWITCH ON Trigger.Operationtype
         {
-            
             WHEN BEFORE_DELETE
             {
                 AccountHelper.validatationAccount(triggerOldMap);
             }
-            WHEN AFTER_UPDATE
-            {
-                AccountHelper.updateContactOwner(triggerNew);
-            }
-
-            
+          
         }
     }
 }
