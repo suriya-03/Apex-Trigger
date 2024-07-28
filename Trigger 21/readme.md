@@ -5,4 +5,4 @@
 
 ##### Trigger On  : Contact
 ##### Event       : Before
-##### DML         : Insert
+##### DML         : Not Required
