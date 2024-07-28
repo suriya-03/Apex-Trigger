@@ -1,4 +1,4 @@
-trigger ContactTrigger on Contact (before insert,before delete, after insert) 
+trigger ContactTrigger on Contact (before insert) 
 {
     ContactHandler obj = new ContactHandler();
     obj.doAction();
