@@ -16,22 +16,10 @@ public with sharing class AccountHandler {
     {
         SWITCH ON Trigger.Operationtype
         {
-
             WHEN BEFORE_INSERT
             {
                 AccountHelper.validAccountPhone(triggerNew);
             }
-            
-            WHEN BEFORE_DELETE
-            {
-                AccountHelper.validatationAccount(triggerOldMap);
-                AccountHelper.preventDeleteContact(triggerOld);
-            }
-            WHEN AFTER_UPDATE
-            {
-                AccountHelper.updateContactOwner(triggerNew);
-            }
-
         }
     }
 }
