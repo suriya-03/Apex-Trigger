@@ -24,6 +24,7 @@ public class OpportunityContactRoleHelper
             
             else
             {
+		opp.Decision_Maker_Count__c = 0;
                 Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage ();
                 message.subject = 'Assign Contact Role ' + opp.Name;
                 message.HtmlBody = 'This opportunity does not have contact role. Kindly assign contact role for this opportunity' + opp.Name + 'and the record Id is ' + opp.Id;
