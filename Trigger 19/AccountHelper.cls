@@ -5,7 +5,7 @@ public with sharing class AccountHelper {
 
     }
     
-    public static void updateContactOwner(List<Account> accList)
+    public static void updateContactOwner(List<Account> accList, Map<Id,Account> oldMapList)
     {
         Set<Id> ids = RecursionUtility.setOfIds;
         Map<Id,String> recordProcessed = new Map<Id,string> ();
@@ -14,38 +14,29 @@ public with sharing class AccountHelper {
         {
             if(!ids.contains(accRec.Id))
             {
-                ids.add(accRec.Id);
-                recordProcessed.put(accRec.Id, accRec.ownerId);
+                if(accRec.ownerId != oldMapList.get(accRec.Id).ownerId)
+                {
+                    ids.add(accRec.Id);
+                    recordProcessed.put(accRec.Id, accRec.ownerId);
+                }
+               
             }
         }
 
-        List<Contact> contactList = [Select ownerId, accountId FROM Contact Where accountId = : recordProcessed.keyset()  WITH USER_MODE];
-
-        List<Contact> contactToUpdate = new List<Contact> ();
+        List<Contact> contactList = [Select Id,ownerId, accountId FROM Contact Where accountId = : recordProcessed.keyset()  WITH USER_MODE];
         
         for(Contact con : contactList)
         {
-            Contact rec = new Contact();
-            rec.ownerId = recordProcessed.get(con.accountId);
-            contactToUpdate.add(rec);
-
+            con.ownerId = recordProcessed.get(con.accountId);
         }
 
-        try {
-            
-            if(!contactToUpdate.isEmpty())
-            {
-                update as user contactToUpdate;
-            }
+     try {
+
+            update as user contactList;
+
         } 
         catch (Exception e) 
         {
             system.debug('Exception ' + e.getMessage());
         }
-
-     }
-
-    
-
-
 }
