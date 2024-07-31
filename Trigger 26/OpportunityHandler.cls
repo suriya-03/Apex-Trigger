@@ -40,14 +40,11 @@ public class OpportunityHandler
             }
             WHEN AFTER_INSERT
             {
-               // OpportunityHelperClass.createOrder(triggerNew); 
-                //OpportunityHelperClass.highValueOpportunity(triggerNew);
+
             }
             
             WHEN AFTER_UPDATE
             {
-                 //OpportunityHelperClass.createOrder(triggerNew); 
-                 //OpportunityHelperClass.highValueOpportunity(triggerNew);
                  OpportunityHelper.updateAccountRating(triggerNew);
             }
             
