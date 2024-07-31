@@ -18,7 +18,7 @@ public with sharing class AccountHandler {
         {
             WHEN AFTER_UPDATE
             {
-                AccountHelper.updateContactOwner(triggerNew);
+                AccountHelper.updateContactOwner(triggerNew,triggerOldMap);
             }
         }
     }
