@@ -1,10 +1,3 @@
-/*
- * Author		: N.Suriya Prakash
- * Created on	: 30.07.2024
- * Modified on	: 
- * Description	: Opportunity Handler Class
- */
-
 public class OpportunityHandler 
 {
     List<Opportunity> triggerNew;
@@ -41,15 +34,12 @@ public class OpportunityHandler
             }
             WHEN AFTER_INSERT
             {
-               // OpportunityHelperClass.createOrder(triggerNew); 
-                //OpportunityHelperClass.highValueOpportunity(triggerNew);
+             
             }
             
             WHEN AFTER_UPDATE
             {
-                 //OpportunityHelperClass.createOrder(triggerNew); 
-                 //OpportunityHelperClass.highValueOpportunity(triggerNew);
-                 OpportunityHelper.updateAccountRating(triggerNew);
+
             }
             
             WHEN AFTER_DELETE
