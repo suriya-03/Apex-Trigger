@@ -1,19 +1,10 @@
 public class OpportunityContactRoleHelper 
 {
-    public static Set<Id> ids = new Set<Id> ();
+   
 	public static void countOfOpportunityContactRole(List<OpportunityContactRole> oppList)
     {
-		
-        List<OpportunityContactRole> recordProcessed = new List<OpportunityContactRole> ();
-        for(OpportunityContactRole oppRole : oppList)
-        {
-            if(!Ids.contains(oppRole.Id))
-            {
-                recordProcessed.add(oppRole);
-            }
-        }
         Set<id> oppIds = new Set<id> ();
-        for(opportunityContactRole oppRoles : recordProcessed)
+        for(opportunityContactRole oppRoles : oppList)
         {
             if(oppRoles.opportunityId != NULL)
             {
